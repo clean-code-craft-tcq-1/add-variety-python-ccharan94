@@ -5,6 +5,9 @@ cooling_range =  { 'PASSIVE_COOLING'     : {'lowerLimit': 0,'upperLimit':35},
 alert_messages_for_breach_code = { 'TOO_LOW'  : 'Temperature is too low', 
                                    'TOO_HIGH' : 'Temperature is too high', 
                                    'NORMAL'   : 'Temperature is normal' }
+
+alert_target_function_mapping = { "TO_CONTROLLER": send_to_controller, "TO_EMAIL" : send_to_email, "TO_CONSOLE" : send_to_console }
+  
                                   
                                   
 def infer_breach(value, lowerLimit, upperLimit):
@@ -18,22 +21,20 @@ def infer_breach(value, lowerLimit, upperLimit):
 def classify_temperature_breach(coolingType, temperatureInC):
   lowerLimit = cooling_range[coolingType]['lowerLimit']
   upperLimit = cooling_range[coolingType]['upperLimit']
-
   return infer_breach(temperatureInC, lowerLimit, upperLimit)
 
 
 def check_and_alert(alertTarget, batteryChar, temperatureInC):
   breachType = classify_temperature_breach(batteryChar, temperatureInC)
-  if alertTarget == 'TO_CONTROLLER':
-    response = send_to_controller(breachType)
-    return response                              
-  elif alertTarget == 'TO_EMAIL':
-    response = send_to_email(breachType)
-    return response
-  return 'ALERT_FAILED'
+  return alert_target_function_mapping[alertTarget](breachType)
 
 
 def send_to_controller(breachType):
+  header = 0xfeed
+  print(f'{header}, {breachType}')                             
+  return f'{header}, {breachType}'
+
+def send_to_console(breachType):
   header = 0xfeed
   print(f'{header}, {breachType}')                             
   return f'{header}, {breachType}'
